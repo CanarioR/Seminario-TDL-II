@@ -6,17 +6,11 @@
 
 using namespace std;
 
-int main() {
-    string entrada = "if (1 > 3) return 5.0; else int x = a + b >= 2;";
+int main(){
+    string entrada = "var123 21 21.21 .2";
     Analizador analizador(entrada);
-    int tipo;
 
-    do {
-        tipo = analizador.sigSimbolo();
-        cout << analizador.tipoToString(tipo) << " -> " << analizador.simbolo << endl;
-    } while (tipo != Tipo::FIN);
-
-    return 0;
+    while(analizador.sigSimbolo() != Tipo::FIN){
+        cout << analizador.tipoToString(analizador.sigSimbolo()) << endl;
+    }
 }
-
-
