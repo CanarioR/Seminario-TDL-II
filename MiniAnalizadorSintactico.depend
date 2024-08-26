@@ -1,0 +1,23 @@
+# depslib dependency file v1.0
+1724572009 source:d:\documentos\8vo\sem_tdl2\minianalizadorsintactico\main.cpp
+	<iostream>
+	"analizador.h"
+	"pila.h"
+
+1724567955 source:d:\documentos\8vo\sem_tdl2\minianalizadorsintactico\pila.cpp
+	"pila.h"
+	"analizador.h"
+	<sstream>
+
+1724572058 source:d:\documentos\8vo\sem_tdl2\minianalizadorsintactico\analizador.cpp
+	"analizador.h"
+
+1724568387 d:\documentos\8vo\sem_tdl2\minianalizadorsintactico\analizador.h
+	<iostream>
+	<string>
+
+1724567942 d:\documentos\8vo\sem_tdl2\minianalizadorsintactico\pila.h
+	<list>
+	<iostream>
+	<string>
+
