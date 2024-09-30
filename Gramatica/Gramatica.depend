@@ -1,0 +1,30 @@
+# depslib dependency file v1.0
+1727506669 source:d:\documentos\8vo\sem_tdl2\gramatica\analizador.cpp
+	"analizador.h"
+
+1727676670 d:\documentos\8vo\sem_tdl2\gramatica\analizador.h
+	<iostream>
+	<string>
+
+1726463697 source:d:\documentos\8vo\sem_tdl2\gramatica\pila.cpp
+	"pila.h"
+
+1726463687 d:\documentos\8vo\sem_tdl2\gramatica\pila.h
+	<stack>
+	"ElementoPila.h"
+
+1726970379 d:\documentos\8vo\sem_tdl2\gramatica\elementopila.h
+	<iostream>
+	<string>
+
+1727678504 source:d:\documentos\8vo\sem_tdl2\gramatica\main.cpp
+	<iostream>
+	<fstream>
+	<vector>
+	<string>
+	"analizador.h"
+	"pila.h"
+
+1726972785 d:\documentos\8vo\sem_tdl2\gramatica\regla.h
+	<string>
+
