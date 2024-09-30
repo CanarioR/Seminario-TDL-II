@@ -1,223 +1,240 @@
 #include "analizador.h"
 
-using namespace std;
+// Constructor con parámetro
+Analizador::Analizador(std::string palabra) : palabra(palabra), indice(0), estado(0), continuar(true) {}
 
-Analizador::Analizador(string palabra)
-{
-    indice = 0;
+// Constructor vacío
+Analizador::Analizador() : indice(0), estado(0), continuar(true) {}
+
+// Función para recibir la entrada
+void Analizador::entrada(std::string palabra) {
     this->palabra = palabra;
-}
-
-Analizador::Analizador()
-{
     indice = 0;
-}
-
-string Analizador::tipoToString(int tipo) {
-    switch (tipo) {
-        case Tipo::IDENTIFICADOR: return "Identificador";
-        case Tipo::ENTERO: return "Entero";
-        case Tipo::REAL: return "Real";
-        case Tipo::OPADIC: return "Operador Adicion";
-        case Tipo::OPMULT: return "Operador Multiplicacion";
-        case Tipo::OPASIGNACION: return "Operador Asignacion";
-        case Tipo::OPREL: return "Operador Relacional";
-        case Tipo::OPAND: return "Operador AND";
-        case Tipo::OPOR: return "Operador OR";
-        case Tipo::OPNOT: return "Operador NOT";
-        case Tipo::PAREN_IZQ: return "Parentesis Izquierdo";
-        case Tipo::PAREN_DER: return "Parentesis Derecho";
-        case Tipo::LLAVE_IZQ: return "Llave Izquierda";
-        case Tipo::LLAVE_DER: return "Llave Derecha";
-        case Tipo::PUNTO_Y_COMA: return "Punto y Coma";
-        case Tipo::IF: return "Palabra Reservada: if";
-        case Tipo::WHILE: return "Palabra Reservada: while";
-        case Tipo::RETURN: return "Palabra Reservada: return";
-        case Tipo::ELSE: return "Palabra Reservada: else";
-        case Tipo::INT: return "Palabra Reservada: int";
-        case Tipo::FLOAT: return "Palabra Reservada: float";
-        default: return "Error";
-    }
-}
-
-
-void Analizador::entrada(string palabra){
-    indice = 0;
-    this->palabra = palabra;
-}
-
-int Analizador::sigSimbolo() {
     estado = 0;
     continuar = true;
-    simbolo = "";
+}
 
+// Función que regresa el siguiente símbolo y su tipo
+int Analizador::sigSimbolo() {
     while (continuar) {
         c = sigCaracter();
 
-        if (c == '$') { // Fin de la cadena
-            tipo = Tipo::FIN;
-            continuar = false;
-            break;
-        }
-
-        switch (estado) {
-            case 0:
-                if (esLetra(c)) sigEstado(1); // Identificadores o palabras reservadas
-                else if (esDigito(c)) sigEstado(2); // Enteros o reales
-                else if (c == '+' || c == '-'){valido(Tipo::OPADIC); tipo = Tipo::OPADIC;} // Operadores de adicion
-                else if (c == '*' || c == '/') {valido(Tipo::OPMULT); tipo = Tipo::OPMULT;} // Operadores de multiplicacion
-                else if (c == '=') sigEstado(5); // Operador de asignacion o relacional
-                else if (c == '<' || c == '>') sigEstado(6); // Operadores relacionales
-                else if (c == '!') sigEstado(7); // Operador NOT o relacional
-                else if (c == '&') sigEstado(8); // Operador AND
-                else if (c == '|') sigEstado(9); // Operador OR
-                else if (c == '(') {valido(Tipo::PAREN_IZQ); tipo = Tipo::PAREN_IZQ;} // Parentesis izquierdo
-                else if (c == ')') {valido(Tipo::PAREN_DER); tipo = Tipo::PAREN_DER;}// Parentesis derecho
-                else if (c == '{') {valido(Tipo::LLAVE_IZQ);tipo = Tipo::LLAVE_IZQ;} // Llave izquierda
-                else if (c == '}') {valido(Tipo::LLAVE_DER); tipo = Tipo::LLAVE_DER;} // Llave derecha
-                else if (c == ';') {valido(Tipo::PUNTO_Y_COMA); tipo = Tipo::PUNTO_Y_COMA;} // Punto y coma
-                else if (esEspacio(c)) continue; // Ignorar espacios
-                else valido(Tipo::ERROR); // Cualquier otro simbolo 
-                break;
-
-            case 1:
-                if (esLetra(c) || esDigito(c)) {
-                    sigEstado(1); // Seguir leyendo identificadores
-                } else {
-                    retroceso();
-                    if (esReservada(simbolo)) {
-                        if (simbolo == "if") tipo = Tipo::IF;
-                        else if (simbolo == "while") tipo = Tipo::WHILE;
-                        else if (simbolo == "return") tipo = Tipo::RETURN;
-                        else if (simbolo == "else") tipo = Tipo::ELSE;
-                        else if (simbolo == "int") tipo = Tipo::INT;
-                        else if (simbolo == "float") tipo = Tipo::FLOAT;
+        if (esEspacio(c)) {
+            continue;
+        } else if (esLetra(c)) {
+            simbolo = c;
+            while (esLetra(c = sigCaracter()) || esDigito(c)) {
+                simbolo += c;
+            }
+            retroceso();
+            if (esReservada(simbolo)) {
+                return tipo; // Palabra reservada
+            } else {
+                tipo = Tipo::IDENTIFICADOR;
+                return Tipo::IDENTIFICADOR;
+            }
+        } else if (esDigito(c)) {
+            simbolo = c;
+            while (esDigito(c = sigCaracter())) {
+                simbolo += c;
+            }
+            if (c == '.') {
+                simbolo += c;
+                while (esDigito(c = sigCaracter())) {
+                    simbolo += c;
+                }
+                retroceso();
+                tipo = Tipo::REAL;
+                return Tipo::REAL;
+            } else {
+                retroceso();
+                tipo = Tipo::ENTERO;
+                return Tipo::ENTERO;
+            }
+        } else {
+            // Otros casos: operadores, signos de puntuación, etc.
+            switch (c) {
+                case '+':
+                case '-':
+                    tipo = Tipo::OPSUMA;
+                    simbolo = c;
+                    return Tipo::OPSUMA;
+                case '*':
+                case '/':
+                    tipo = Tipo::OPMUL;
+                    simbolo = c;
+                    return Tipo::OPMUL;
+                case '<':
+                case '>': {
+                    simbolo = c;
+                    if ((c = sigCaracter()) == '=') {
+                        simbolo += c;
+                        tipo = Tipo::OPRELAC;
+                        return Tipo::OPRELAC;
                     } else {
-                        tipo = Tipo::IDENTIFICADOR;
+                        retroceso();
+                        tipo = Tipo::OPRELAC;
+                        return Tipo::OPRELAC;
                     }
-                    continuar = false;
                 }
-                break;
-
-            case 2:
-                if (esDigito(c)) {
-                    sigEstado(2);
-                } else if (c == '.') {
-                    sigEstado(15); // Detectar nï¿½meros reales
-                } else {
-                    retroceso();
-                    tipo = Tipo::ENTERO;
-                    continuar = false;
+                case '!': {
+                    simbolo = c;
+                    c = sigCaracter();
+                    if (c == '=') {
+                        simbolo += c;
+                        tipo = Tipo::OPIGUALDAD;
+                        return Tipo::OPIGUALDAD;
+                    } else {
+                        retroceso();
+                        tipo = Tipo::OPNOT;
+                        return Tipo::OPNOT;
+                    }
                 }
-                break;
-
-            case 5:
-                if (c == '=') {
-                    valido(Tipo::OPREL); // ==
-                    tipo = Tipo::OPREL;
-                } else {
-                    retroceso();
-                    tipo = Tipo::OPASIGNACION; // =
-                    continuar = false;
+                case '=': {
+                    simbolo = c;
+                    c = sigCaracter();
+                    if (c == '=') {
+                        simbolo += c;
+                        tipo = Tipo::OPIGUALDAD;
+                        return Tipo::OPIGUALDAD;
+                    } else {
+                        retroceso();
+                        tipo = Tipo::ASIGNACION;
+                        return Tipo::ASIGNACION;
+                    }
                 }
-                break;
-
-            case 6:
-                if (c == '=') {
-                    valido(Tipo::OPREL); // <= o >=
-                    tipo = Tipo::OPREL;
-                } else {
-                    retroceso();
-                    tipo = Tipo::OPREL; // < o >
-                    continuar = false;
+                case '|': {
+                    simbolo = c;
+                    c = sigCaracter();
+                    if (c == '|') {
+                        simbolo += c;
+                        tipo = Tipo::OPOR;
+                        return Tipo::OPOR;
+                    } else {
+                        tipo = Tipo::ERROR;
+                        return Tipo::ERROR;
+                    }
                 }
-                break;
-
-            case 7:
-                if (c == '=') {
-                    valido(Tipo::OPREL); // !=
-                    tipo = Tipo::OPREL;
-                } else {
-                    retroceso();
-                    tipo = Tipo::OPNOT; // !
-                    continuar = false;
+                case '&': {
+                    simbolo = c;
+                    c = sigCaracter();
+                    if (c == '&') {
+                        simbolo += c;
+                        tipo = Tipo::OPAND;
+                        return Tipo::OPAND;
+                    } else {
+                        tipo = Tipo::ERROR;
+                        return Tipo::ERROR;
+                    }
                 }
-                break;
-
-            case 8:
-                if (c == '&') {
-                    valido(Tipo::OPAND); // &&
-                    tipo = Tipo::OPAND;
-                } else {
-                    retroceso();
-                    tipo = Tipo::ERROR; // Error, un solo &
+                case ';':
+                    tipo = Tipo::PUNTO_Y_COMA;
+                    simbolo = c;
+                    return Tipo::PUNTO_Y_COMA;
+                case ',':
+                    tipo = Tipo::COMA;
+                    simbolo = c;
+                    return Tipo::COMA;
+                case '(':
+                    tipo = Tipo::PAREN_IZQ;
+                    simbolo = c;
+                    return Tipo::PAREN_IZQ;
+                case ')':
+                    tipo = Tipo::PAREN_DER;
+                    simbolo = c;
+                    return Tipo::PAREN_DER;
+                case '{':
+                    tipo = Tipo::LLAVE_IZQ;
+                    simbolo = c;
+                    return Tipo::LLAVE_IZQ;
+                case '}':
+                    tipo = Tipo::LLAVE_DER;
+                    simbolo = c;
+                    return Tipo::LLAVE_DER;
+                case '$':
+                    tipo = Tipo::FIN;
+                    simbolo = c;
                     continuar = false;
-                }
-                break;
-
-            case 9:
-                if (c == '|') {
-                    valido(Tipo::OPOR); // ||
-                    tipo = Tipo::OPOR;
-                } else {
-                    retroceso();
-                    tipo = Tipo::ERROR; // Error, un solo |
-                    continuar = false;
-                }
-                break;
-
-            case 15:
-                if (esDigito(c)) {
-                    sigEstado(15);
-                } else {
-                    retroceso();
-                    tipo = Tipo::REAL;
-                    continuar = false;
-                }
-                break;
+                    return Tipo::FIN;
+                default:
+                    tipo = Tipo::ERROR;
+                    simbolo = c;
+                    return Tipo::ERROR;
+            }
+        }
+    }
+}
+    // Función que convierte el tipo a string (para fines de depuración o presentación)
+std::string Analizador::tipoToString(int tipo) {
+        switch (tipo) {
+            case Tipo::IDENTIFICADOR: return "Identificador";
+            case Tipo::ENTERO: return "Entero";
+            case Tipo::REAL: return "Real";
+            case Tipo::CADENA: return "Cadena";
+            case Tipo::TIPO: return "Tipo";
+            case Tipo::OPSUMA: return "Operador_Suma";
+            case Tipo::OPMUL: return "Operador_Multiplicación";
+            case Tipo::OPRELAC: return "Operador_Relacional";
+            case Tipo::OPOR: return "Operador_OR";
+            case Tipo::OPAND: return "Operador_AND";
+            case Tipo::OPNOT: return "Operador_NOT";
+            case Tipo::OPIGUALDAD: return "Operador_Igualdad";
+            case Tipo::PUNTO_Y_COMA: return "Punto_y_Coma";
+            case Tipo::COMA: return "Coma";
+            case Tipo::PAREN_IZQ: return "Parentesis_Izquierdo";
+            case Tipo::PAREN_DER: return "Parentesis_Derecho";
+            case Tipo::LLAVE_IZQ: return "Llave_Izquierda";
+            case Tipo::LLAVE_DER: return "Llave_Derecha";
+            case Tipo::ASIGNACION: return "Asignacion";
+            case Tipo::IF: return "If";
+            case Tipo::WHILE: return "While";
+            case Tipo::RETURN: return "Return";
+            case Tipo::ELSE: return "Else";
+            case Tipo::FIN: return "Fin_de_Cadena";
+            default: return "Error";
         }
     }
 
-    return tipo;
-}
+    // Función que verifica si la cadena es una palabra reservada
+    bool Analizador::esReservada(std::string palabra) {
+        if (palabra == "if") {
+            tipo = Tipo::IF;
+        } else if (palabra == "while") {
+            tipo = Tipo::WHILE;
+        } else if (palabra == "return") {
+            tipo = Tipo::RETURN;
+        } else if (palabra == "else") {
+            tipo = Tipo::ELSE;
+        } else if (palabra == "int" || palabra == "float") {
+            tipo = Tipo::TIPO;
+        } else {
+            return false;
+        }
+        return true;
+    }
 
-char Analizador::sigCaracter(){
-    if(terminado()) return '$';
-    return palabra[indice++];
-}
+    // Funciones auxiliares
 
-void Analizador::sigEstado(int estado){
-    this->estado = estado;
-    simbolo += c;
-}
+    char Analizador::sigCaracter() {
+        return (indice < palabra.size()) ? palabra[indice++] : '$';
+    }
 
-void Analizador::valido(int estado){
-    sigEstado(estado);
-    continuar = false;
-}
+    void Analizador::retroceso() {
+        if (indice > 0) --indice;
+    }
 
-bool Analizador::terminado(){
-    return indice >= palabra.length();
-}
+    bool Analizador::esLetra(char c) {
+        return std::isalpha(static_cast<unsigned char>(c));
+    }
 
-bool Analizador::esLetra(char c){
-    return isalpha(c) || c == '_';
-}
+    bool Analizador::esDigito(char c) {
+        return std::isdigit(static_cast<unsigned char>(c));
+    }
 
-bool Analizador::esDigito(char c){
-    return isdigit(c);
-}
+    bool Analizador::esEspacio(char c) {
+        return std::isspace(static_cast<unsigned char>(c));
+    }
 
-bool Analizador::esEspacio(char c){
-    return c == ' ' || c == '\t';
-}
-
-void Analizador::retroceso(){
-    if(c != '$') indice--;
-    continuar = false;
-}
-
-bool Analizador::esReservada(string palabra) {
-    return palabra == "if" || palabra == "while" || palabra == "return" || palabra == "else" || palabra == "int" || palabra == "float";
-}
-
+    bool Analizador::terminado() {
+        return !continuar;
+    }
